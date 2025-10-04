@@ -18,9 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (settings.serverUrl) {
     document.getElementById('serverUrl').value = settings.serverUrl;
   } else {
-    // Default to localhost for local development
-    // For Railway: Replace with your Railway URL (e.g., https://your-app.railway.app)
-    document.getElementById('serverUrl').value = 'http://localhost:3001';
+    // Railway production URL
+    document.getElementById('serverUrl').value = 'https://multi-agent-testing-production.up.railway.app';
   }
   
   if (settings.testGoal) document.getElementById('testGoal').value = settings.testGoal;

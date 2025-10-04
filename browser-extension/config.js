@@ -7,8 +7,8 @@
 export const config = {
   // Default backend server URL
   // LOCAL: http://localhost:3001
-  // RAILWAY: https://your-app-name.railway.app
-  defaultServerUrl: 'http://localhost:3001',
+  // RAILWAY: https://multi-agent-testing-production.up.railway.app
+  defaultServerUrl: 'https://multi-agent-testing-production.up.railway.app',
   
   // You can also set different URLs per environment
   development: {
@@ -16,8 +16,8 @@ export const config = {
   },
   
   production: {
-    // Update this after deploying to Railway
-    serverUrl: 'https://your-app-name.railway.app',
+    // Railway production URL
+    serverUrl: 'https://multi-agent-testing-production.up.railway.app',
   },
   
   // Auto-detect environment (checks if on railway domain)
