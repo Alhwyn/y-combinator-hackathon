@@ -11,6 +11,8 @@ An AI-powered QA testing system that runs multiple Playwright browser automation
 - **Automatic Retries** - Failed tests are automatically retried
 - **Health Monitoring** - Agent heartbeat and automatic failover
 - **Flexible Actions** - Support for navigate, click, fill, assert, and more
+- **Live Video Streaming** - Watch agents work in real-time 🎬
+- **Production Ready** - Deploy to Railway, Fly.io, or AWS 🚀
 
 ## 🏗️ Architecture
 
@@ -244,6 +246,65 @@ const { data: steps } = await supabase
 - **`release_test(agent_uuid, test_uuid, status)`** - Releases a test and updates agent stats
 - **`mark_stale_agents()`** - Marks inactive agents as offline
 
+## 🎬 Live Video Preview
+
+Watch your agents work in real-time with live video streaming!
+
+### Quick Start
+
+```bash
+# Terminal 1: Start video server
+npm run stream:server
+
+# Terminal 2: Start agents with video
+npm run start:video
+
+# Browser: Open dashboard
+open http://localhost:3001/dashboard
+```
+
+See **[LIVE_VIDEO_PREVIEW.md](LIVE_VIDEO_PREVIEW.md)** for complete setup.
+
+---
+
+## 🚀 Deployment & Hosting
+
+### ⚠️ Important: Do NOT use Supabase Edge Functions
+
+Edge Functions have a **60-second timeout** and your agents run **indefinitely**. They will fail immediately.
+
+### ✅ Recommended Hosting Options
+
+| Provider         | Best For               | Cost         | Setup Time |
+| ---------------- | ---------------------- | ------------ | ---------- |
+| **Railway**      | Getting started, demos | $5/month     | 5 minutes  |
+| **Fly.io**       | Production, scaling    | $10-60/month | 15 minutes |
+| **DigitalOcean** | Full control           | $12/month    | 30 minutes |
+| **AWS ECS**      | Enterprise scale       | $30+/month   | 1-2 hours  |
+
+See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete hosting instructions.
+
+### Quick Deploy to Railway
+
+**See [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) for complete step-by-step instructions.**
+
+```bash
+# 1. Push to GitHub
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+
+# 2. Go to railway.app and login with GitHub
+# 3. Click "New Project" → "Deploy from GitHub"
+# 4. Select your repo
+# 5. Add environment variables (see RAILWAY_DEPLOY.md)
+# 6. Railway deploys automatically ✅
+```
+
+Your agents will be running on Railway in ~3-5 minutes!
+
+---
+
 ## 🎨 Frontend Dashboard
 
 The `frontend/` directory is empty and ready for your dashboard implementation.
@@ -256,6 +317,7 @@ See [frontend/README.md](frontend/README.md) for setup instructions and suggesti
 - Test results viewer with screenshots
 - Test case management UI
 - Analytics and metrics dashboard
+- **Live video feeds** (see LIVE_VIDEO_PREVIEW.md)
 
 ## 🛠️ Development
 
@@ -346,6 +408,20 @@ Logs are stored in the `logs/` directory:
 1. Verify storage bucket exists in Supabase
 2. Check storage policies are applied
 3. Ensure `SUPABASE_SERVICE_KEY` has storage permissions
+
+## 📚 Documentation
+
+Complete guides for every aspect of the system:
+
+- **[QUICK_START.md](QUICK_START.md)** - Get running in 5 minutes
+- **[HOW_TO_TEST.md](HOW_TO_TEST.md)** - Testing guide (30 seconds to verify)
+- **[PARALLEL_TESTING.md](PARALLEL_TESTING.md)** - Run tests in parallel safely
+- **[LIVE_VIDEO_PREVIEW.md](LIVE_VIDEO_PREVIEW.md)** - Watch agents live 🎬
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deploy to production 🚀
+- **[HOSTING_AND_VIDEO_SUMMARY.md](HOSTING_AND_VIDEO_SUMMARY.md)** - Quick reference
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing docs
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Detailed setup instructions
+- **[SUPABASE_CLI_SETUP.md](SUPABASE_CLI_SETUP.md)** - Supabase CLI reference
 
 ## 📄 License
 

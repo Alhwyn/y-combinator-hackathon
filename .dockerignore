@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+logs
+screenshots
+videos
+*.md
+.DS_Store
+.vscode
+.idea
+*.log
+test-backend.sh
+frontend/node_modules
+

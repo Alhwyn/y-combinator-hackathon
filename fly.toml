@@ -1,0 +1,23 @@
+# Fly.io configuration
+app = "multi-agent-testing"
+primary_region = "sjc"
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = false
+  min_machines_running = 1
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 2048
+
+[env]
+  HEADLESS = "true"
+  LOG_LEVEL = "info"
+  CONCURRENT_AGENTS = "5"
+

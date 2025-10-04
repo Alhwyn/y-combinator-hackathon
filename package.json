@@ -6,7 +6,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "start:video": "ENABLE_VIDEO_RECORDING=true ENABLE_LIVE_STREAM=true node src/index.js",
     "agent": "node src/agent/worker.js",
+    "agent:video": "ENABLE_VIDEO_RECORDING=true ENABLE_LIVE_STREAM=true node src/agent/worker.js",
     "spawn": "node src/orchestration/spawner.js",
     "monitor": "node src/orchestration/monitor.js",
     "setup:db": "node src/setup/database.js",
@@ -17,7 +19,8 @@
     "test:single": "HEADLESS=false npm run agent",
     "test:watch": "tail -f logs/combined.log",
     "test:agent": "TEST_MODE=true HEADLESS=true npm run agent",
-    "test:spawn": "TEST_MODE=true npm run spawn"
+    "test:spawn": "TEST_MODE=true npm run spawn",
+    "stream:server": "node src/server/videoStream.js"
   },
   "keywords": [
     "playwright",
@@ -34,7 +37,10 @@
     "dotenv": "^16.3.1",
     "winston": "^3.11.0",
     "uuid": "^9.0.1",
-    "p-queue": "^8.0.1"
+    "p-queue": "^8.0.1",
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
