@@ -1,0 +1,21 @@
+{
+  "name": "multi-agent-testing-dashboard",
+  "version": "1.0.0",
+  "description": "Real-time dashboard for Multi-Agent Browser Testing System",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Frontend not implemented yet. Add your framework here (React, Vue, Svelte, etc.)'",
+    "build": "echo 'Build not configured'",
+    "preview": "echo 'Preview not configured'"
+  },
+  "keywords": [
+    "dashboard",
+    "testing",
+    "monitoring"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

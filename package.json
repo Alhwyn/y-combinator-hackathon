@@ -1,0 +1,38 @@
+{
+  "name": "multi-agent-browser-testing",
+  "version": "1.0.0",
+  "description": "AI-powered QA testing system with parallel Playwright agents and Supabase",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "agent": "node src/agent/worker.js",
+    "spawn": "node src/orchestration/spawner.js",
+    "setup:db": "node src/setup/database.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "keywords": [
+    "playwright",
+    "supabase",
+    "testing",
+    "automation",
+    "qa"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "playwright": "^1.40.1",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "uuid": "^9.0.1",
+    "p-queue": "^8.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
