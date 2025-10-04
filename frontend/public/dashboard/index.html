@@ -303,9 +303,10 @@
   </div>
   
   <script>
-    // Use wss:// for HTTPS, ws:// for HTTP
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/viewer`;
+    // Use deployed Railway URL for testing
+    const RAILWAY_URL = 'multi-agent-testing-production.up.railway.app';
+    const wsProtocol = 'wss:'; // Railway uses HTTPS
+    const wsUrl = `${wsProtocol}//${RAILWAY_URL}/viewer`;
     let ws;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 10;
