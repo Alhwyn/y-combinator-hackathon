@@ -1,106 +1,73 @@
-# Multi-Agent Testing Dashboard - Frontend
+# Welcome to your Lovable project
 
-This folder is reserved for the frontend dashboard application.
+## Project info
 
-## Suggested Implementation
+**URL**: https://lovable.dev/projects/65fd46ea-f2be-407e-a3aa-927e84683a6c
 
-### Recommended Stack
+## How can I edit this code?
 
-- **React** + **Vite** + **TailwindCSS**
-- **Supabase JS Client** for real-time subscriptions
-- **React Query** for data fetching
-- **Recharts** or **Chart.js** for visualizations
+There are several ways of editing your application.
 
-### Key Features to Implement
+**Use Lovable**
 
-1. **Real-time Agent Monitoring**
+Simply visit the [Lovable Project](https://lovable.dev/projects/65fd46ea-f2be-407e-a3aa-927e84683a6c) and start prompting.
 
-   - Live agent status display
-   - Agent health indicators
-   - Active test assignments
+Changes made via Lovable will be committed automatically to this repo.
 
-2. **Test Results Viewer**
+**Use your preferred IDE**
 
-   - Test execution history
-   - Pass/fail statistics
-   - Screenshot viewer with before/after comparison
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-3. **Test Case Management**
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-   - Create/Edit/Delete test cases
-   - Test case templates
-   - Bulk operations
+Follow these steps:
 
-4. **Dashboard Analytics**
-   - Test execution metrics
-   - Agent utilization charts
-   - Success rate trends
-   - Performance graphs
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-### Setup Instructions
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-#### Option 1: React + Vite
+# Step 3: Install the necessary dependencies.
+npm i
 
-\`\`\`bash
-cd frontend
-npm create vite@latest . -- --template react
-npm install @supabase/supabase-js
-npm install @tanstack/react-query
-npm install recharts
-npm install tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-\`\`\`
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
 
-#### Option 2: Next.js
+**Edit a file directly in GitHub**
 
-\`\`\`bash
-cd frontend
-npx create-next-app@latest . --typescript --tailwind --app
-npm install @supabase/supabase-js
-\`\`\`
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-### Environment Variables
+**Use GitHub Codespaces**
 
-Create a \`.env.local\` file:
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-\`\`\`env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-\`\`\`
+## What technologies are used for this project?
 
-### Supabase Realtime Integration
+This project is built with:
 
-Example of subscribing to agent updates:
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-\`\`\`javascript
-import { createClient } from '@supabase/supabase-js';
+## How can I deploy this project?
 
-const supabase = createClient(
-import.meta.env.VITE_SUPABASE_URL,
-import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+Simply open [Lovable](https://lovable.dev/projects/65fd46ea-f2be-407e-a3aa-927e84683a6c) and click on Share -> Publish.
 
-// Subscribe to agent changes
-const channel = supabase
-.channel('agents')
-.on('postgres_changes',
-{ event: '\*', schema: 'public', table: 'agents' },
-(payload) => {
-console.log('Agent updated:', payload);
-}
-)
-.subscribe();
-\`\`\`
+## Can I connect a custom domain to my Lovable project?
 
-### Suggested Components
+Yes, you can!
 
-- \`AgentList\` - Display all agents with status
-- \`TestCaseList\` - List and manage test cases
-- \`TestResultsView\` - Show test execution results
-- \`ScreenshotViewer\` - Display before/after screenshots
-- \`MetricsDashboard\` - Charts and statistics
-- \`TestCaseEditor\` - Create/edit test cases
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
----
-
-**Note:** This is an empty placeholder. Implement your preferred frontend framework here.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
