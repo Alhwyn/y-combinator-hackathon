@@ -303,7 +303,9 @@
   </div>
   
   <script>
-    const wsUrl = `ws://${window.location.host}/viewer`;
+    // Use wss:// for HTTPS, ws:// for HTTP
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/viewer`;
     let ws;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 10;
