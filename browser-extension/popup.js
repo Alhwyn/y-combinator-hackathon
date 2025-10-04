@@ -14,12 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await chrome.storage.local.get(['apiKey', 'serverUrl', 'testGoal', 'interval']);
   if (settings.apiKey) document.getElementById('apiKey').value = settings.apiKey;
   
-  // Default server URL - change this to your Railway URL after deployment
+  // Default server URL - CHANGE THIS to match your backend!
   if (settings.serverUrl) {
     document.getElementById('serverUrl').value = settings.serverUrl;
   } else {
-    // Railway production URL
-    document.getElementById('serverUrl').value = 'https://multi-agent-testing-production.up.railway.app';
+    // ⚠️ UPDATE THIS URL to match your backend deployment ⚠️
+    // Local: http://localhost:3001
+    // Railway: https://your-app.up.railway.app
+    document.getElementById('serverUrl').value = 'http://localhost:3001';
   }
   
   if (settings.testGoal) document.getElementById('testGoal').value = settings.testGoal;

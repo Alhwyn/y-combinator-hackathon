@@ -30,6 +30,21 @@ class VideoStreamServer {
       // AI Agent API routes
       this.app.use('/api/ai-agent', aiAgentRouter);
       
+      // Root endpoint for testing
+      this.app.get('/', (req, res) => {
+        res.json({
+          status: 'ok',
+          message: 'Multi-Agent Testing Server',
+          version: '1.0.0',
+          endpoints: {
+            health: '/health',
+            dashboard: '/dashboard/',
+            agents: '/api/agents',
+            aiAgent: '/api/ai-agent'
+          }
+        });
+      });
+      
       // Health check endpoint with detailed info
       this.app.get('/health', (req, res) => {
         const healthData = {
@@ -39,7 +54,7 @@ class VideoStreamServer {
           timestamp: new Date().toISOString(),
           uptime: process.uptime()
         };
-        logger.info('Health check', healthData);
+        logger.info('Health check requested', healthData);
         res.json(healthData);
       });
       
@@ -112,7 +127,7 @@ class VideoStreamServer {
       const host = process.env.PORT ? '0.0.0.0' : 'localhost';
       
       this.server.listen(port, host, () => {
-        logger.info(`✅ Video stream server started`, {
+        logger.info(`✅ Video stream server LISTENING on ${host}:${port}`, {
           port: port,
           host: host,
           environment: process.env.NODE_ENV || 'development',
@@ -121,9 +136,14 @@ class VideoStreamServer {
         
         if (process.env.RAILWAY_PUBLIC_DOMAIN) {
           logger.info(`📊 Dashboard: https://${process.env.RAILWAY_PUBLIC_DOMAIN}/dashboard`);
+          logger.info(`🔗 Health check: https://${process.env.RAILWAY_PUBLIC_DOMAIN}/health`);
         } else {
           logger.info(`📊 Dashboard: http://localhost:${port}/dashboard`);
+          logger.info(`🔗 Health check: http://localhost:${port}/health`);
         }
+        
+        // Log that server is ready to accept connections
+        logger.info(`🚀 Server is ready to accept HTTP connections`);
       });
       
       this.server.on('error', (error) => {

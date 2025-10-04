@@ -1,14 +1,18 @@
 /**
  * Browser Extension Configuration
  * 
- * Update these values after deploying to Railway
+ * IMPORTANT: Update the defaultServerUrl below to match your backend URL
+ * 
+ * Common configurations:
+ * - Local development: http://localhost:3001
+ * - Railway: https://your-app-name.up.railway.app
+ * - Custom deployment: https://your-domain.com
  */
 
 export const config = {
-  // Default backend server URL
-  // LOCAL: http://localhost:3001
-  // RAILWAY: https://multi-agent-testing-production.up.railway.app
-  defaultServerUrl: 'https://multi-agent-testing-production.up.railway.app',
+  // ⚠️ CHANGE THIS TO YOUR BACKEND URL ⚠️
+  // The browser extension will use this URL if no custom URL is saved
+  defaultServerUrl: 'http://localhost:3001',  // Default to local for safety
   
   // You can also set different URLs per environment
   development: {
@@ -16,8 +20,9 @@ export const config = {
   },
   
   production: {
-    // Railway production URL
-    serverUrl: 'https://multi-agent-testing-production.up.railway.app',
+    // Set this to your production backend URL
+    // Example: https://your-app.up.railway.app
+    serverUrl: 'http://localhost:3001',  // Update this!
   },
   
   // Auto-detect environment (checks if on railway domain)
