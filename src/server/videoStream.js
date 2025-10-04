@@ -43,6 +43,17 @@ class VideoStreamServer {
         res.json(healthData);
       });
       
+      // /agent endpoint info (it's a WebSocket endpoint, not HTTP)
+      this.app.get('/agent', (req, res) => {
+        res.json({
+          status: 'ok',
+          message: '/agent is a WebSocket endpoint. Please connect via WebSocket protocol.',
+          endpoint: 'ws://' + req.headers.host + '/agent',
+          usage: 'Use WebSocket connection to stream video from agents',
+          connectedAgents: this.agents.size
+        });
+      });
+      
       // API endpoints
       this.app.get('/api/agents', (req, res) => {
         try {
@@ -95,12 +106,10 @@ class VideoStreamServer {
       });
       
       // Start server
-      // Railway requires using their PORT variable, fallback to config or 3001 for local
-      // On Railway, ignore LIVE_STREAM_PORT and use Railway's PORT
-      const port = process.env.PORT || 
-                   (process.env.RAILWAY_PUBLIC_DOMAIN ? null : config.liveStream?.port) || 
-                   3001;
-      const host = process.env.RAILWAY_PUBLIC_DOMAIN ? '0.0.0.0' : 'localhost';
+      // Railway provides PORT env var - use it first
+      // For local development, use LIVE_STREAM_PORT or default to 3001
+      const port = process.env.PORT || config.liveStream?.port || 3001;
+      const host = process.env.PORT ? '0.0.0.0' : 'localhost';
       
       this.server.listen(port, host, () => {
         logger.info(`✅ Video stream server started`, {
