@@ -5,7 +5,8 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/startWithStream.js",
+    "start:no-stream": "node src/index.js",
     "start:video": "ENABLE_VIDEO_RECORDING=true ENABLE_LIVE_STREAM=true node src/index.js",
     "start:with-stream": "node src/startWithStream.js",
     "agent": "node src/agent/worker.js",
