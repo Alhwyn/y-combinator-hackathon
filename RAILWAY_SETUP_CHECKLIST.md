@@ -1,6 +1,7 @@
 # ✅ Railway Setup Checklist for Live Streaming
 
 ## Current Status
+
 - ✅ Code pushed to GitHub
 - ✅ Dockerfile fixed (Sharp dependencies added)
 - ⏳ Railway will auto-deploy (2-3 minutes)
@@ -14,6 +15,7 @@
 Go to: https://railway.app
 
 Watch the deployment logs. You should now see:
+
 ```
 ✅ Building image...
 ✅ Installing dependencies... (this should work now!)
@@ -45,6 +47,7 @@ https://multi-agent-testing-production.up.railway.app/dashboard
 ```
 
 You should see:
+
 - ✅ Beautiful dashboard loads
 - ✅ 5 agent cards appear
 - ✅ All showing "Online" status
@@ -70,16 +73,15 @@ Look for specific error messages. Common issues:
 
 1. **"npm install failed"**
    - Fixed by our Dockerfile update (added build tools)
-   
 2. **"playwright install failed"**
    - Usually auto-fixes on retry
-   
 3. **"Out of memory"**
    - Reduce `CONCURRENT_AGENTS` to 3
 
 ### Solution: Trigger Manual Redeploy
 
 In Railway:
+
 1. Go to "Deployments" tab
 2. Click the three dots menu
 3. Click "Redeploy"
@@ -103,7 +105,7 @@ After setup:
 ### Expected Behavior:
 
 1. **Dashboard loads** - Beautiful dark UI with stats at top
-2. **Agents connect** - 5 agent cards show "Online" 
+2. **Agents connect** - 5 agent cards show "Online"
 3. **Load tests** - Run `npm run load:samples` locally
 4. **Video starts** - Live browser screenshots appear (2 FPS)
 5. **Test completes** - Agent goes back to "Idle"
@@ -120,11 +122,13 @@ After setup:
 ## 💰 Railway Costs
 
 Your current setup:
+
 - **5 agents** at 2 FPS
 - **~$5-10/month** on Railway Hobby plan
 - **Very low bandwidth** (2 FPS = ~5 KB/s per agent)
 
 To reduce costs:
+
 - Lower `CONCURRENT_AGENTS` to 3
 - Reduce `LIVE_STREAM_FPS` to 1
 
@@ -184,4 +188,3 @@ If still having issues:
 4. Try redeploying manually
 
 The Dockerfile fix should resolve the build issues!
-
