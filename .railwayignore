@@ -1,0 +1,4 @@
+# Ignore Dockerfile for Railway - use Nixpacks instead
+Dockerfile*
+*.flyio
+
