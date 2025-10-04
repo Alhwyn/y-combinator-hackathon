@@ -1,0 +1,4 @@
+project_id = "replication"
+
+[functions.fetch-github-repos]
+verify_jwt = true
