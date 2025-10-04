@@ -96,7 +96,10 @@ class VideoStreamServer {
       
       // Start server
       // Railway requires using their PORT variable, fallback to config or 3001 for local
-      const port = process.env.PORT || config.liveStream?.port || 3001;
+      // On Railway, ignore LIVE_STREAM_PORT and use Railway's PORT
+      const port = process.env.PORT || 
+                   (process.env.RAILWAY_PUBLIC_DOMAIN ? null : config.liveStream?.port) || 
+                   3001;
       const host = process.env.RAILWAY_PUBLIC_DOMAIN ? '0.0.0.0' : 'localhost';
       
       this.server.listen(port, host, () => {
