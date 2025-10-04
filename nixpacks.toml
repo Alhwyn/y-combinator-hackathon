@@ -1,0 +1,17 @@
+# Railway Nixpacks configuration for Playwright
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "python3"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = [
+  "npx playwright install-deps chromium",
+  "npx playwright install chromium"
+]
+
+[start]
+cmd = "node src/index.js"
+
