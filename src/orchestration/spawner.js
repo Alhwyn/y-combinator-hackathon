@@ -19,14 +19,19 @@ class AgentSpawner {
   }
 
   spawn() {
-    logger.info(`Spawning ${this.count} agents...`);
+    const mode = config.agent.aiMode ? 'AI agent mode' : 'standard mode';
+    logger.info(`Spawning ${this.count} agents in ${mode}...`);
     
     for (let i = 0; i < this.count; i++) {
       const agentProcess = spawn('node', [
         join(__dirname, '../agent/worker.js')
       ], {
         stdio: 'inherit',
-        env: { ...process.env }
+        env: { 
+          ...process.env,
+          // Ensure AI mode is passed to child processes
+          AI_MODE: config.agent.aiMode ? 'true' : 'false'
+        }
       });
       
       agentProcess.on('exit', (code, signal) => {
@@ -47,18 +52,22 @@ class AgentSpawner {
       });
       
       this.agents.push(agentProcess);
-      logger.info(`Agent ${i + 1} spawned (PID: ${agentProcess.pid})`);
+      logger.info(`Agent ${i + 1} spawned (PID: ${agentProcess.pid}) - ${mode}`);
     }
     
-    logger.info(`All ${this.count} agents spawned successfully`);
+    logger.info(`All ${this.count} agents spawned successfully in ${mode}`);
   }
 
   spawnSingleAgent(index) {
+    const mode = config.agent.aiMode ? 'AI agent mode' : 'standard mode';
     const agentProcess = spawn('node', [
       join(__dirname, '../agent/worker.js')
     ], {
       stdio: 'inherit',
-      env: { ...process.env }
+      env: { 
+        ...process.env,
+        AI_MODE: config.agent.aiMode ? 'true' : 'false'
+      }
     });
     
     agentProcess.on('exit', (code, signal) => {
@@ -71,7 +80,7 @@ class AgentSpawner {
     });
     
     this.agents.push(agentProcess);
-    logger.info(`Agent ${index + 1} respawned (PID: ${agentProcess.pid})`);
+    logger.info(`Agent ${index + 1} respawned (PID: ${agentProcess.pid}) - ${mode}`);
   }
 
   async stop() {

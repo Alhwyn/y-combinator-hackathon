@@ -21,6 +21,7 @@ export const config = {
     timeout: parseInt(process.env.AGENT_TIMEOUT_MS || '300000', 10),
     testMode: process.env.TEST_MODE === 'true', // Enables test isolation
     testId: process.env.TEST_ID || null, // Unique test run identifier
+    aiMode: process.env.AI_MODE === 'true', // Run agents in AI autonomous mode
   },
   browser: {
     type: process.env.BROWSER_TYPE || 'chromium',

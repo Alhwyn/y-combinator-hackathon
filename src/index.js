@@ -9,7 +9,18 @@ import config from './config/index.js';
 
 async function main() {
   logger.info('Starting Multi-Agent Browser Testing System...');
+  
+  const mode = config.agent.aiMode ? '🤖 AI AUTONOMOUS MODE' : 'standard mode';
   logger.info(`Configuration: ${config.agent.concurrentAgents} agents, ${config.browser.type} browser`);
+  logger.info(`Mode: ${mode}`);
+  
+  if (config.agent.aiMode) {
+    logger.info('🤖 AI agents will use Claude vision to analyze screenshots and autonomously test websites');
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logger.error('❌ ANTHROPIC_API_KEY not set! AI mode requires an Anthropic API key.');
+      process.exit(1);
+    }
+  }
   
   // Start the monitor
   const monitor = new AgentMonitor();

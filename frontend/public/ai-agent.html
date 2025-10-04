@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 AI Agent - Browser Mode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .control-panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+    
+    .btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .test-window {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    .iframe-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+    
+    .iframe-header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .iframe-url {
+      font-family: monospace;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 700px;
+      border: none;
+      background: white;
+    }
+    
+    .log-panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-height: 784px;
+      overflow-y: auto;
+    }
+    
+    .log-panel h3 {
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .log-entry {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      border-left: 3px solid;
+    }
+    
+    .log-entry.info {
+      border-color: #3b82f6;
+    }
+    
+    .log-entry.success {
+      border-color: #10b981;
+    }
+    
+    .log-entry.error {
+      border-color: #ef4444;
+    }
+    
+    .log-entry.ai {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.2);
+    }
+    
+    .log-time {
+      opacity: 0.6;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-idle {
+      background: rgba(156, 163, 175, 0.3);
+    }
+    
+    .status-running {
+      background: rgba(59, 130, 246, 0.3);
+      animation: pulse 2s infinite;
+    }
+    
+    .status-completed {
+      background: rgba(16, 185, 129, 0.3);
+    }
+    
+    .status-failed {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    @media (max-width: 1200px) {
+      .test-window {
+        grid-template-columns: 1fr;
+      }
+      
+      iframe {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🤖 AI Agent - Browser Mode</h1>
+      <p>Let Claude autonomously test your website by analyzing screenshots</p>
+    </div>
+    
+    <div class="control-panel">
+      <div class="form-group">
+        <label for="apiKey">🔑 Claude API Key</label>
+        <input 
+          type="password" 
+          id="apiKey" 
+          placeholder="sk-ant-..." 
+          autocomplete="off"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="testUrl">🌐 Website URL</label>
+        <input 
+          type="url" 
+          id="testUrl" 
+          placeholder="https://example.com" 
+          value="https://www.nytimes.com/games/wordle/index.html"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="testGoal">🎯 Test Goal</label>
+        <textarea 
+          id="testGoal" 
+          placeholder="Describe what you want the AI to test..."
+        >Play Wordle - Type words, submit guesses, and try to solve the puzzle</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="captureInterval">📸 Screenshot Interval (seconds)</label>
+        <input 
+          type="number" 
+          id="captureInterval" 
+          min="1" 
+          max="10" 
+          value="2"
+        />
+      </div>
+      
+      <div class="btn-group">
+        <button id="startBtn" class="btn btn-primary">🚀 Start AI Agent</button>
+        <button id="stopBtn" class="btn btn-danger hidden">⏹️ Stop Agent</button>
+        <span id="statusBadge" class="status-badge status-idle">Idle</span>
+      </div>
+    </div>
+    
+    <div id="testWindow" class="test-window hidden">
+      <div class="iframe-container">
+        <div class="iframe-header">
+          <span class="iframe-url" id="currentUrl">about:blank</span>
+        </div>
+        <iframe id="testFrame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+      </div>
+      
+      <div class="log-panel">
+        <h3>📋 Activity Log</h3>
+        <div id="logContainer"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module">
+    // State
+    let isRunning = false;
+    let captureIntervalId = null;
+    let stepCount = 0;
+    let apiKey = '';
+    let conversationHistory = [];
+    
+    // DOM elements
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    const testWindow = document.getElementById('testWindow');
+    const testFrame = document.getElementById('testFrame');
+    const currentUrl = document.getElementById('currentUrl');
+    const logContainer = document.getElementById('logContainer');
+    const apiKeyInput = document.getElementById('apiKey');
+    const testUrlInput = document.getElementById('testUrl');
+    const testGoalInput = document.getElementById('testGoal');
+    const captureIntervalInput = document.getElementById('captureInterval');
+    
+    // Event listeners
+    startBtn.addEventListener('click', startAgent);
+    stopBtn.addEventListener('click', stopAgent);
+    
+    function log(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      
+      const time = document.createElement('div');
+      time.className = 'log-time';
+      time.textContent = new Date().toLocaleTimeString();
+      
+      const content = document.createElement('div');
+      content.textContent = message;
+      
+      entry.appendChild(time);
+      entry.appendChild(content);
+      logContainer.insertBefore(entry, logContainer.firstChild);
+      
+      // Keep only last 50 logs
+      while (logContainer.children.length > 50) {
+        logContainer.removeChild(logContainer.lastChild);
+      }
+    }
+    
+    function updateStatus(status) {
+      statusBadge.className = `status-badge status-${status}`;
+      statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    async function startAgent() {
+      apiKey = apiKeyInput.value.trim();
+      const testUrl = testUrlInput.value.trim();
+      const testGoal = testGoalInput.value.trim();
+      const interval = parseInt(captureIntervalInput.value) * 1000;
+      
+      if (!apiKey) {
+        alert('Please enter your Claude API key');
+        return;
+      }
+      
+      if (!testUrl) {
+        alert('Please enter a website URL');
+        return;
+      }
+      
+      if (!testGoal) {
+        alert('Please describe your test goal');
+        return;
+      }
+      
+      isRunning = true;
+      stepCount = 0;
+      conversationHistory = [];
+      
+      startBtn.classList.add('hidden');
+      stopBtn.classList.remove('hidden');
+      testWindow.classList.remove('hidden');
+      updateStatus('running');
+      
+      log('🤖 AI Agent started', 'success');
+      log(`🎯 Goal: ${testGoal}`, 'info');
+      log(`🌐 URL: ${testUrl}`, 'info');
+      log(`📸 Capture interval: ${interval / 1000}s`, 'info');
+      
+      // Initialize conversation
+      const systemPrompt = buildSystemPrompt(testGoal, testUrl);
+      conversationHistory.push({
+        role: 'assistant',
+        content: systemPrompt
+      });
+      
+      // Navigate to initial URL
+      testFrame.src = testUrl;
+      currentUrl.textContent = testUrl;
+      
+      // Wait for page to load
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Start capture loop
+      captureIntervalId = setInterval(captureAndDecide, interval);
+    }
+    
+    function stopAgent() {
+      isRunning = false;
+      
+      if (captureIntervalId) {
+        clearInterval(captureIntervalId);
+        captureIntervalId = null;
+      }
+      
+      startBtn.classList.remove('hidden');
+      stopBtn.classList.add('hidden');
+      updateStatus('idle');
+      
+      log('🛑 AI Agent stopped', 'info');
+    }
+    
+    function buildSystemPrompt(goal, url) {
+      return `You are an autonomous QA testing agent. Your goal is to test: "${goal}"
+
+Website: ${url}
+
+Your task is to:
+1. Analyze screenshots of the web page
+2. Decide what action to take next to accomplish the test goal
+3. Return ONE action at a time in JSON format
+
+Available actions:
+- click: {"type": "click", "selector": "button.submit", "description": "Click submit button"}
+- type: {"type": "type", "selector": "input#email", "value": "test@example.com", "description": "Type email"}
+- keyboard: {"type": "keyboard", "key": "Enter", "description": "Press Enter key"}
+- wait: {"type": "wait", "ms": 2000, "description": "Wait 2 seconds"}
+- complete: {"type": "complete", "reason": "Test goal achieved", "success": true}
+
+Rules:
+1. Always respond with a SINGLE JSON action
+2. Be specific with selectors
+3. Add clear descriptions
+4. When goal is achieved, use complete action
+5. If stuck, use {"type": "complete", "reason": "Unable to continue", "success": false}
+
+Respond with JSON only, no other text.`;
+    }
+    
+    async function captureAndDecide() {
+      if (!isRunning) return;
+      
+      stepCount++;
+      log(`📸 Step ${stepCount}: Capturing screenshot...`, 'info');
+      
+      try {
+        // Capture screenshot using canvas
+        const screenshot = await captureScreenshot();
+        
+        if (!screenshot) {
+          log('❌ Failed to capture screenshot', 'error');
+          return;
+        }
+        
+        log(`🧠 Asking Claude for next action...`, 'ai');
+        
+        // Get next action from Claude
+        const action = await getNextAction(screenshot);
+        
+        if (!action) {
+          log('❌ No action received from AI', 'error');
+          return;
+        }
+        
+        log(`✨ AI Decision: ${action.type} - ${action.description || ''}`, 'ai');
+        
+        // Execute action
+        await executeAction(action);
+        
+        // Check if test is complete
+        if (action.type === 'complete') {
+          log(`${action.success ? '✅' : '❌'} Test completed: ${action.reason}`, action.success ? 'success' : 'error');
+          stopAgent();
+        }
+        
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+    
+    async function captureScreenshot() {
+      return new Promise((resolve) => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const rect = testFrame.getBoundingClientRect();
+          
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          
+          // Note: This won't work due to CORS/sandbox restrictions in real implementation
+          // In production, you'd need to use a browser extension or server-side rendering
+          // For demo purposes, we'll simulate with a placeholder
+          
+          log('⚠️ Note: Screenshot capture in browser is limited by CORS. Use browser extension for full functionality.', 'info');
+          
+          // Simulate with base64 placeholder
+          resolve(null);
+          
+        } catch (error) {
+          console.error('Screenshot error:', error);
+          resolve(null);
+        }
+      });
+    }
+    
+    async function getNextAction(screenshot) {
+      try {
+        // Note: In real implementation, you'd call your backend API
+        // which would then call Claude API with the screenshot
+        
+        // For demo, we'll show how the API call would work
+        log('💡 In production: Send screenshot to Claude API via your backend', 'info');
+        
+        // Simulate AI decision (in real app, this comes from Claude)
+        const simulatedAction = getSimulatedAction();
+        
+        return simulatedAction;
+        
+      } catch (error) {
+        log(`❌ AI API Error: ${error.message}`, 'error');
+        return null;
+      }
+    }
+    
+    function getSimulatedAction() {
+      // Simulate different actions for demo
+      if (stepCount === 1) {
+        return { type: 'wait', ms: 2000, description: 'Wait for page to load' };
+      } else if (stepCount === 2) {
+        return { type: 'click', selector: '.Modal-module_closeIcon__TcEKb', description: 'Close modal' };
+      } else if (stepCount === 3) {
+        return { type: 'keyboard', key: 'A', description: 'Type letter A' };
+      } else {
+        return { type: 'complete', reason: 'Demo completed', success: true };
+      }
+    }
+    
+    async function executeAction(action) {
+      switch (action.type) {
+        case 'click':
+          log(`👆 Clicking: ${action.selector}`, 'info');
+          // In real implementation: testFrame.contentWindow.document.querySelector(action.selector).click();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          break;
+          
+        case 'type':
+          log(`⌨️ Typing into: ${action.selector}`, 'info');
+          // In real implementation: inject script into iframe
+          await new Promise(resolve => setTimeout(resolve, 500));
+          break;
+          
+        case 'keyboard':
+          log(`⌨️ Pressing key: ${action.key}`, 'info');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          break;
+          
+        case 'wait':
+          log(`⏳ Waiting ${action.ms}ms...`, 'info');
+          await new Promise(resolve => setTimeout(resolve, action.ms));
+          break;
+          
+        case 'complete':
+          log(`🏁 ${action.reason}`, action.success ? 'success' : 'error');
+          break;
+          
+        default:
+          log(`⚠️ Unknown action type: ${action.type}`, 'error');
+      }
+    }
+    
+    log('👋 Ready to start! Configure your test and click "Start AI Agent"', 'info');
+  </script>
+</body>
+</html>
+

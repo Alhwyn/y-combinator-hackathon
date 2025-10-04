@@ -32,6 +32,10 @@ export class ActionHandler {
         return await this.hover(params);
       case 'press':
         return await this.press(params);
+      case 'keypress': // Alias for press (AI often uses this)
+        return await this.press(params);
+      case 'keyboard':
+        return await this.keyboard(params);
       case 'assert':
         return await this.assert(params);
       case 'screenshot':
@@ -93,6 +97,20 @@ export class ActionHandler {
       await this.page.keyboard.press(key);
     }
     return { success: true, key };
+  }
+
+  async keyboard({ text, key, delay = 0 }) {
+    if (text) {
+      // Type text
+      await this.page.keyboard.type(text, { delay });
+      return { success: true, text };
+    } else if (key) {
+      // Press a specific key
+      await this.page.keyboard.press(key);
+      return { success: true, key };
+    } else {
+      throw new Error('keyboard action requires either "text" or "key" parameter');
+    }
   }
 
   async assert({ selector, expected, assertType = 'text' }) {
