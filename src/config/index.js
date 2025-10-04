@@ -42,6 +42,20 @@ export const config = {
     screenshots: join(__dirname, '../../screenshots'),
     logs: join(__dirname, '../../logs'),
   },
+  video: {
+    enabled: process.env.ENABLE_VIDEO_RECORDING === 'true',
+    saveOnDisk: process.env.SAVE_VIDEO_ON_DISK === 'true',
+    size: {
+      width: parseInt(process.env.VIDEO_WIDTH || '1280', 10),
+      height: parseInt(process.env.VIDEO_HEIGHT || '720', 10),
+    },
+  },
+  liveStream: {
+    enabled: process.env.ENABLE_LIVE_STREAM === 'true',
+    fps: parseInt(process.env.LIVE_STREAM_FPS || '2', 10),
+    quality: parseInt(process.env.LIVE_STREAM_QUALITY || '60', 10),
+    port: parseInt(process.env.LIVE_STREAM_PORT || '3001', 10),
+  },
 };
 
 export default config;

@@ -5,6 +5,7 @@ import logger from '../lib/logger.js';
 import config from '../config/index.js';
 import ActionHandler from './actions.js';
 import { uploadScreenshot } from '../utils/storage.js';
+import { LiveStreamManager } from '../utils/liveStream.js';
 
 /**
  * Playwright Agent Worker
@@ -20,6 +21,8 @@ class Agent {
     this.page = null;
     this.currentTestId = null;
     this.heartbeatInterval = null;
+    this.liveCaptureInterval = null;
+    this.liveStream = null;
     this.isRunning = false;
   }
 
@@ -37,6 +40,7 @@ class Agent {
         metadata: {
           pid: process.pid,
           nodeVersion: process.version,
+          liveStreamEnabled: config.liveStream?.enabled || false,
         },
       });
     
@@ -47,6 +51,16 @@ class Agent {
     
     // Launch browser
     await this.launchBrowser();
+    
+    // Start live stream if enabled
+    if (config.liveStream?.enabled) {
+      this.liveStream = new LiveStreamManager(this.id, this.name);
+      await this.liveStream.connect();
+      
+      if (this.liveStream.connected) {
+        logger.info(`📡 Live streaming enabled for ${this.name}`);
+      }
+    }
     
     // Start heartbeat
     this.startHeartbeat();
@@ -69,7 +83,38 @@ class Agent {
     
     this.page = await this.context.newPage();
     
+    // Start live screenshot capture if enabled
+    if (config.liveStream?.enabled && this.liveStream) {
+      this.startLiveCapture();
+    }
+    
     logger.info(`Browser launched: ${browserType}`);
+  }
+
+  startLiveCapture() {
+    const fps = config.liveStream.fps;
+    const interval = 1000 / fps; // Convert FPS to milliseconds
+    
+    this.liveCaptureInterval = setInterval(async () => {
+      try {
+        if (this.page && this.currentTestId) {
+          const screenshot = await this.page.screenshot({
+            type: 'jpeg',
+            quality: config.liveStream.quality,
+          });
+          
+          await this.liveStream.sendFrame({
+            agentId: this.id,
+            agentName: this.name,
+            testId: this.currentTestId,
+            timestamp: Date.now(),
+            frame: screenshot.toString('base64'),
+          });
+        }
+      } catch (error) {
+        // Silently fail on screenshot errors (page might be loading)
+      }
+    }, interval);
   }
 
   startHeartbeat() {
@@ -120,6 +165,17 @@ class Agent {
   async executeTest(testId) {
     this.currentTestId = testId;
     logger.info(`Executing test: ${testId}`);
+    
+    // Notify live stream that test started
+    if (this.liveStream?.connected) {
+      await this.liveStream.sendEvent({
+        type: 'test_started',
+        agentId: this.id,
+        agentName: this.name,
+        testId: testId,
+        timestamp: Date.now(),
+      });
+    }
     
     const startTime = Date.now();
     let testResultId = null;
@@ -251,6 +307,18 @@ class Agent {
       
       logger.info(`Test completed successfully: ${testId}`, { duration });
       
+      // Notify live stream that test completed
+      if (this.liveStream?.connected) {
+        await this.liveStream.sendEvent({
+          type: 'test_completed',
+          agentId: this.id,
+          agentName: this.name,
+          testId: testId,
+          timestamp: Date.now(),
+          status: 'completed',
+        });
+      }
+      
     } catch (error) {
       logger.error(`Test failed: ${testId}`, { error });
       
@@ -317,6 +385,14 @@ class Agent {
   async stop() {
     logger.info(`Stopping agent: ${this.name}`);
     this.isRunning = false;
+    
+    if (this.liveCaptureInterval) {
+      clearInterval(this.liveCaptureInterval);
+    }
+    
+    if (this.liveStream) {
+      await this.liveStream.disconnect();
+    }
     
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
