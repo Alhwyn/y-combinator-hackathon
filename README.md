@@ -1,440 +1,403 @@
-# Multi-Agent Browser Testing System
+# 🤖 AI QA Testing System
 
-An AI-powered QA testing system that runs multiple Playwright browser automation agents in parallel using Supabase for orchestration and real-time monitoring.
+> Autonomous AI-powered browser testing using Claude's vision capabilities
 
-## 🌟 Features
+## What is This?
 
-- **Parallel Test Execution** - Run multiple browser agents concurrently
-- **Real-time Monitoring** - Live updates via Supabase Realtime
-- **Smart Test Queue** - Priority-based test distribution
-- **Screenshot Capture** - Before/after screenshots for every action
-- **Automatic Retries** - Failed tests are automatically retried
-- **Health Monitoring** - Agent heartbeat and automatic failover
-- **Flexible Actions** - Support for navigate, click, fill, assert, and more
-- **Live Video Streaming** - Watch agents work in real-time 🎬
-- **Production Ready** - Deploy to Railway, Fly.io, or AWS 🚀
+An intelligent testing system where **Claude AI analyzes screenshots** and autonomously tests your websites by:
 
-## 🏗️ Architecture
+- 📸 Taking screenshots every 2 seconds
+- 🧠 Using vision AI to understand the page
+- 💡 Deciding what actions to take
+- ⚡ Executing clicks, typing, navigation in real-time
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Supabase Backend                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Postgres │  │ Realtime │  │ Storage  │  │   Auth   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────┐
-│                    Orchestration Layer                       │
-│  ┌──────────────┐         ┌──────────────┐                 │
-│  │   Spawner    │────────▶│   Monitor    │                 │
-│  └──────────────┘         └──────────────┘                 │
-└─────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────┐
-│                    Playwright Agents                         │
-│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐         │
-│  │Agent1│  │Agent2│  │Agent3│  │Agent4│  │Agent5│         │
-│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘         │
-└─────────────────────────────────────────────────────────────┘
-```
+**No brittle selectors. No manual test scripts. Just describe what to test!**
 
-## 📋 Prerequisites
+---
 
-- Node.js >= 18.0.0
-- A Supabase account and project
-- Playwright browsers installed
+## 🚀 Quick Start (5 Minutes)
 
-## 🚀 Quick Start
+### Prerequisites
 
-### 1. Clone and Install
+- Node.js 18+
+- Chrome browser
+- Claude API key ([get one here](https://console.anthropic.com/))
+
+### 1. Install
 
 ```bash
-git clone <your-repo-url>
-cd yc-supabase
 npm install
 ```
 
-### 2. Set Up Environment Variables
+### 2. Configure
 
-Create a `.env` file in the root directory:
-
-```env
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-
-# Agent Configuration
-CONCURRENT_AGENTS=5
-HEADLESS=true
-SCREENSHOT_QUALITY=80
-
-# Browser Configuration
-BROWSER_TYPE=chromium
-VIEWPORT_WIDTH=1920
-VIEWPORT_HEIGHT=1080
-
-# Retry Configuration
-MAX_RETRIES=3
-RETRY_DELAY_MS=1000
-
-# Health Check
-AGENT_HEARTBEAT_INTERVAL_MS=5000
-AGENT_TIMEOUT_MS=300000
-
-# Logging
-LOG_LEVEL=info
-```
-
-### 3. Set Up Database
-
-Run the SQL migrations in your Supabase SQL Editor:
-
-1. Go to your Supabase Dashboard → SQL Editor
-2. Execute `supabase/schema.sql`
-3. Execute `supabase/storage.sql`
-
-Or use the helper script to verify:
+Add your Claude API key to `.env`:
 
 ```bash
-npm run setup:db
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-### 4. Install Playwright Browsers
-
-```bash
-npx playwright install chromium
-```
-
-### 5. Load Sample Tests (Optional)
-
-```bash
-node examples/loadSampleTests.js
-```
-
-### 6. Start the System
-
-#### Option A: Start Everything
+### 3. Start Server
 
 ```bash
 npm start
 ```
 
-This will:
+Server runs on http://localhost:3001
 
-- Spawn 5 parallel agents (configurable via `.env`)
-- Start the monitoring system
-- Begin processing tests from the queue
+### 4. Load Browser Extension
 
-#### Option B: Start Components Separately
+1. Open Chrome → `chrome://extensions/`
+2. Enable "Developer mode" (top right toggle)
+3. Click "Load unpacked"
+4. Select the `browser-extension/` folder
 
-```bash
-# Terminal 1: Start agent spawner
-npm run spawn
+### 5. Run Your First Test!
 
-# Terminal 2: Start a single agent
-npm run agent
-
-# Terminal 3: Monitor
-node src/orchestration/monitor.js
-```
-
-## 📖 Usage
-
-### Creating Test Cases
-
-You can create test cases programmatically:
-
-```javascript
-import { createTestCase } from "./src/utils/testHelpers.js";
-
-await createTestCase({
-  name: "Login Flow Test",
-  description: "Test user login functionality",
-  url: "https://example.com/login",
-  actions: [
-    {
-      type: "navigate",
-      target: "https://example.com/login",
-    },
-    {
-      type: "fill",
-      selector: "#email",
-      value: "test@example.com",
-    },
-    {
-      type: "fill",
-      selector: "#password",
-      value: "password123",
-    },
-    {
-      type: "click",
-      selector: "button[type='submit']",
-    },
-    {
-      type: "wait",
-      selector: ".dashboard",
-      timeout: 5000,
-    },
-    {
-      type: "assert",
-      selector: ".user-name",
-      assertType: "text",
-      expected: "Test User",
-    },
-  ],
-  priority: 10,
-  tags: ["authentication", "smoke"],
-});
-```
-
-### Supported Actions
-
-| Action       | Description              | Example                                                                       |
-| ------------ | ------------------------ | ----------------------------------------------------------------------------- |
-| `navigate`   | Navigate to URL          | `{ type: "navigate", target: "https://example.com" }`                         |
-| `click`      | Click element            | `{ type: "click", selector: "#button" }`                                      |
-| `fill`       | Fill input field         | `{ type: "fill", selector: "#email", value: "test@example.com" }`             |
-| `select`     | Select dropdown option   | `{ type: "select", selector: "#dropdown", values: ["option1"] }`              |
-| `wait`       | Wait for element/timeout | `{ type: "wait", selector: ".loading", timeout: 5000 }`                       |
-| `scroll`     | Scroll to element        | `{ type: "scroll", selector: "#footer" }`                                     |
-| `hover`      | Hover over element       | `{ type: "hover", selector: ".menu-item" }`                                   |
-| `press`      | Press keyboard key       | `{ type: "press", key: "Enter" }`                                             |
-| `assert`     | Verify element/text      | `{ type: "assert", selector: "h1", assertType: "text", expected: "Welcome" }` |
-| `screenshot` | Capture screenshot       | `{ type: "screenshot", fullPage: true }`                                      |
-
-### Viewing Results
-
-Query test results via Supabase client:
-
-```javascript
-import supabase from "./src/lib/supabase.js";
-
-// Get all test results
-const { data: results } = await supabase
-  .from("test_results")
-  .select(
-    `
-    *,
-    agent:agents(name),
-    test_case:test_cases(name)
-  `
-  )
-  .order("created_at", { ascending: false });
-
-// Get test steps for a specific result
-const { data: steps } = await supabase
-  .from("test_steps")
-  .select("*")
-  .eq("test_result_id", resultId)
-  .order("step_number");
-```
-
-## 📊 Database Schema
-
-### Tables
-
-- **`agents`** - Tracks active browser agents and their status
-- **`test_cases`** - Stores test scenarios with actions and expected results
-- **`test_results`** - Records test execution outcomes
-- **`test_steps`** - Detailed step-by-step execution logs
-
-### Key Functions
-
-- **`claim_test(agent_uuid)`** - Atomically assigns a pending test to an agent
-- **`release_test(agent_uuid, test_uuid, status)`** - Releases a test and updates agent stats
-- **`mark_stale_agents()`** - Marks inactive agents as offline
-
-## 🎬 Live Video Preview
-
-Watch your agents work in real-time with live video streaming!
-
-### Quick Start
-
-```bash
-# Terminal 1: Start video server
-npm run stream:server
-
-# Terminal 2: Start agents with video
-npm run start:video
-
-# Browser: Open dashboard
-open http://localhost:3001/dashboard
-```
-
-See **[LIVE_VIDEO_PREVIEW.md](LIVE_VIDEO_PREVIEW.md)** for complete setup.
+1. Navigate to any website (try: https://www.nytimes.com/games/wordle/)
+2. Click the extension icon
+3. Enter test goal: `"Play Wordle - Close modals, type words, solve puzzle"`
+4. Click "Start Testing"
+5. Watch AI test your site! 🎉
 
 ---
 
-## 🚀 Deployment & Hosting
+## 📖 How It Works
 
-### ⚠️ Important: Do NOT use Supabase Edge Functions
-
-Edge Functions have a **60-second timeout** and your agents run **indefinitely**. They will fail immediately.
-
-### ✅ Recommended Hosting Options
-
-| Provider         | Best For               | Cost         | Setup Time |
-| ---------------- | ---------------------- | ------------ | ---------- |
-| **Railway**      | Getting started, demos | $5/month     | 5 minutes  |
-| **Fly.io**       | Production, scaling    | $10-60/month | 15 minutes |
-| **DigitalOcean** | Full control           | $12/month    | 30 minutes |
-| **AWS ECS**      | Enterprise scale       | $30+/month   | 1-2 hours  |
-
-See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for complete hosting instructions.
-
-### Quick Deploy to Railway
-
-**See [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md) for complete step-by-step instructions.**
-
-```bash
-# 1. Push to GitHub
-git add .
-git commit -m "Ready for deployment"
-git push origin main
-
-# 2. Go to railway.app and login with GitHub
-# 3. Click "New Project" → "Deploy from GitHub"
-# 4. Select your repo
-# 5. Add environment variables (see RAILWAY_DEPLOY.md)
-# 6. Railway deploys automatically ✅
+```
+1. Extension captures screenshot
+2. Sends to your backend server
+3. Server calls Claude API with image
+4. Claude analyzes and decides next action
+5. Extension executes the action
+6. Repeat until goal achieved
 ```
 
-Your agents will be running on Railway in ~3-5 minutes!
+**Example:**
+
+```
+Goal: "Test login with invalid credentials"
+
+AI Actions:
+1. Click "Login" button
+2. Type "test@test.com" in email
+3. Type "wrong" in password
+4. Click "Submit"
+5. Verify error message appears
+6. Complete: Test passed ✅
+```
 
 ---
 
-## 🎨 Frontend Dashboard
+## 🎯 Two Testing Modes
 
-The `frontend/` directory is empty and ready for your dashboard implementation.
+### 1. AI Agent Mode (New! 🤖)
 
-See [frontend/README.md](frontend/README.md) for setup instructions and suggestions.
+- **Setup**: Natural language description
+- **Execution**: AI figures it out
+- **Best for**: Exploratory testing, dynamic UIs, quick tests
+- **Cost**: ~$0.10-0.50 per test
 
-### Recommended Features:
+### 2. Standard Playwright Mode
 
-- Real-time agent status monitoring
-- Test results viewer with screenshots
-- Test case management UI
-- Analytics and metrics dashboard
-- **Live video feeds** (see LIVE_VIDEO_PREVIEW.md)
+- **Setup**: Write JavaScript test code
+- **Execution**: Pre-scripted actions
+- **Best for**: Regression tests, CI/CD, high-volume
+- **Cost**: Free
 
-## 🛠️ Development
+---
 
-### Project Structure
+## 📁 Project Structure
 
 ```
 yc-supabase/
+├── browser-extension/       # Chrome extension for AI testing
+│   ├── manifest.json
+│   ├── popup.html
+│   ├── background.js       # Main agent logic
+│   └── README.md
+│
 ├── src/
 │   ├── agent/
-│   │   ├── worker.js          # Main agent worker
-│   │   └── actions.js         # Action handlers
-│   ├── orchestration/
-│   │   ├── spawner.js         # Agent spawner
-│   │   └── monitor.js         # Health monitor
-│   ├── utils/
-│   │   ├── storage.js         # Screenshot storage
-│   │   └── testHelpers.js     # Test management utilities
-│   ├── lib/
-│   │   ├── supabase.js        # Supabase client
-│   │   └── logger.js          # Winston logger
-│   ├── config/
-│   │   └── index.js           # Configuration
-│   └── index.js               # Main entry point
-├── supabase/
-│   ├── schema.sql             # Database schema
-│   └── storage.sql            # Storage policies
-├── examples/
-│   ├── sampleTests.js         # Sample test cases
-│   └── loadSampleTests.js     # Load samples into DB
-├── frontend/                  # Empty frontend folder
-└── package.json
+│   │   ├── worker.js       # Standard Playwright agent
+│   │   ├── aiWorker.js     # AI-powered agent
+│   │   └── actions.js      # Action handlers
+│   │
+│   ├── server/
+│   │   ├── videoStream.js  # Main server + dashboard
+│   │   └── aiAgentServer.js # AI API routes
+│   │
+│   └── lib/
+│       ├── supabase.js     # Database client
+│       └── logger.js       # Logging
+│
+├── frontend/public/
+│   ├── dashboard/          # Live agent dashboard
+│   └── ai-agent.html       # Web-based AI UI
+│
+├── supabase/               # Database schema
+│   └── migrations/
+│
+├── .env                    # Your configuration
+├── package.json
+└── README.md              # This file
 ```
 
-### Running Tests
+---
+
+## 🛠️ Configuration
+
+Edit `.env` file:
 
 ```bash
-npm test
+# Required for AI Agent
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Supabase (for test storage)
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=your-key
+SUPABASE_SERVICE_KEY=your-key
+
+# Agent Settings
+CONCURRENT_AGENTS=5          # Number of parallel agents
+HEADLESS=true               # Run browsers in headless mode
+SCREENSHOT_QUALITY=80       # Screenshot quality (1-100)
+
+# Browser
+BROWSER_TYPE=chromium       # chromium, firefox, or webkit
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
 ```
 
-### Debugging
+---
 
-Set `LOG_LEVEL=debug` in `.env` for verbose logging.
+## 🎮 Usage Examples
 
-Run a single agent in non-headless mode:
+### Example 1: Wordle
+
+```javascript
+Goal: "Play Wordle - Close any popups, type ABOUT, press Enter, type CRANE, press Enter"
+
+Expected behavior:
+1. AI closes welcome modal
+2. Types first word
+3. Submits
+4. Types second word
+5. Submits
+6. Takes final screenshot
+```
+
+### Example 2: Form Testing
+
+```javascript
+Goal: "Fill contact form with test@test.com, message 'Hello', submit, verify success"
+
+Expected behavior:
+1. AI finds email field
+2. Types email
+3. Finds message field
+4. Types message
+5. Clicks submit
+6. Verifies success message
+```
+
+### Example 3: Shopping Flow
+
+```javascript
+Goal: "Search for 'laptop', click first result, check price is displayed"
+
+Expected behavior:
+1. AI finds search box
+2. Types "laptop"
+3. Submits search
+4. Clicks first product
+5. Verifies price exists
+6. Completes test
+```
+
+---
+
+## 💰 Costs
+
+Claude 3.5 Sonnet pricing per test:
+
+- **5 steps**: ~$0.05-0.15
+- **10 steps**: ~$0.10-0.30
+- **30 steps**: ~$0.30-0.90
+- **50 steps**: ~$0.50-1.50
+
+**Tips to reduce costs:**
+
+- Increase screenshot interval (3-5 seconds)
+- Use specific test goals
+- Stop tests early when goal achieved
+
+---
+
+## 🚀 Running Tests
+
+### Method 1: Browser Extension (Recommended)
 
 ```bash
-HEADLESS=false npm run agent
+# 1. Start server
+npm start
+
+# 2. Open Chrome with extension loaded
+# 3. Navigate to website
+# 4. Click extension → Configure → Start
 ```
 
-## 🔧 Configuration
+### Method 2: Standard Playwright Tests
 
-All configuration is in `src/config/index.js` and can be overridden via environment variables:
+```bash
+# Create test
+node examples/loadSampleTests.js
 
-| Variable                      | Default  | Description                            |
-| ----------------------------- | -------- | -------------------------------------- |
-| `CONCURRENT_AGENTS`           | 5        | Number of parallel agents              |
-| `HEADLESS`                    | true     | Run browsers in headless mode          |
-| `SCREENSHOT_QUALITY`          | 80       | JPEG quality (1-100)                   |
-| `BROWSER_TYPE`                | chromium | Browser type (chromium/firefox/webkit) |
-| `MAX_RETRIES`                 | 3        | Max retry attempts for failed tests    |
-| `AGENT_HEARTBEAT_INTERVAL_MS` | 5000     | Heartbeat interval                     |
-| `AGENT_TIMEOUT_MS`            | 300000   | Agent timeout (5 minutes)              |
+# Run agents
+npm start
 
-## 📝 Logging
+# Or run single test
+npm run test:single
+```
 
-Logs are stored in the `logs/` directory:
+### Method 3: Programmatic
 
-- `error.log` - Error-level logs only
-- `combined.log` - All logs
-- Console output with colors and timestamps
+```javascript
+import { AIAgent } from "./src/agent/aiWorker.js";
+
+const agent = new AIAgent(apiKey, testCaseId);
+await agent.start();
+```
+
+---
+
+## 📊 Monitoring
+
+### Live Dashboard
+
+View running agents in real-time:
+
+```
+http://localhost:3001/dashboard/
+```
+
+Shows:
+
+- Active agents
+- Running tests
+- Live video streams
+- Real-time stats
+
+### API Endpoints
+
+```bash
+# Health check
+curl http://localhost:3001/health
+
+# Agent list
+curl http://localhost:3001/api/agents
+
+# AI Agent status
+curl -X POST http://localhost:3001/api/ai-agent/start
+```
+
+---
 
 ## 🐛 Troubleshooting
 
-### Agents Not Starting
+### "Port 3001 already in use"
 
-1. Check Supabase credentials in `.env`
-2. Verify database schema is applied
-3. Check logs in `logs/error.log`
+```bash
+# Kill existing process
+lsof -ti:3001 | xargs kill -9
 
-### Tests Not Running
+# Or use different port
+PORT=3002 npm start
+```
 
-1. Ensure test cases exist: `SELECT * FROM test_cases WHERE status='pending'`
-2. Check agent status: `SELECT * FROM agents`
-3. Verify agents are running: `ps aux | grep node`
+### "API key invalid"
 
-### Screenshots Not Uploading
+```bash
+# Test your key
+node test-anthropic-key.js
 
-1. Verify storage bucket exists in Supabase
-2. Check storage policies are applied
-3. Ensure `SUPABASE_SERVICE_KEY` has storage permissions
+# Get new key at:
+# https://console.anthropic.com/
+```
+
+### "Extension not working"
+
+```bash
+# Reload extension
+chrome://extensions/ → Click reload icon
+
+# Check logs
+Right-click extension → "Inspect popup"
+```
+
+### "Element not found"
+
+- Page might still be loading
+- AI will retry on next screenshot
+- Try increasing capture interval to 3-5 seconds
+
+---
 
 ## 📚 Documentation
 
-Complete guides for every aspect of the system:
+- **[AI_AGENT_GUIDE.md](AI_AGENT_GUIDE.md)** - Complete AI agent documentation
+- **[browser-extension/README.md](browser-extension/README.md)** - Extension setup & usage
 
-- **[QUICK_START.md](QUICK_START.md)** - Get running in 5 minutes
-- **[HOW_TO_TEST.md](HOW_TO_TEST.md)** - Testing guide (30 seconds to verify)
-- **[PARALLEL_TESTING.md](PARALLEL_TESTING.md)** - Run tests in parallel safely
-- **[LIVE_VIDEO_PREVIEW.md](LIVE_VIDEO_PREVIEW.md)** - Watch agents live 🎬
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deploy to production 🚀
-- **[HOSTING_AND_VIDEO_SUMMARY.md](HOSTING_AND_VIDEO_SUMMARY.md)** - Quick reference
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing docs
-- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Detailed setup instructions
-- **[SUPABASE_CLI_SETUP.md](SUPABASE_CLI_SETUP.md)** - Supabase CLI reference
+---
+
+## 🔐 Security
+
+- ✅ API keys stored in `.env` (never commit!)
+- ✅ Screenshots only sent to your backend + Claude
+- ✅ No data stored unless configured
+- ✅ Extension uses scoped permissions
+
+**Never commit `.env` file to git!**
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] Multi-tab support
+- [ ] Test recording/replay
+- [ ] Cost tracking dashboard
+- [ ] Screenshot diff comparison
+- [ ] GPT-4V and Gemini support
+- [ ] Team collaboration
+- [ ] CI/CD integration
+- [ ] Test analytics
+
+---
 
 ## 📄 License
 
 MIT
 
-## 🤝 Contributing
+---
 
-Contributions welcome! Please open an issue or PR.
+## 🙏 Built With
+
+- [Claude 3.5 Sonnet](https://anthropic.com/) - AI vision & reasoning
+- [Playwright](https://playwright.dev/) - Browser automation
+- [Supabase](https://supabase.com/) - Database & storage
+- [Express.js](https://expressjs.com/) - Backend server
+- [Chrome Extension API](https://developer.chrome.com/docs/extensions/) - Browser integration
 
 ---
 
-**Built with:**
+## 🤝 Contributing
 
-- [Playwright](https://playwright.dev/) - Browser automation
-- [Supabase](https://supabase.com/) - Backend and real-time database
-- [Winston](https://github.com/winstonjs/winston) - Logging
+Contributions welcome! Open an issue or PR.
+
+---
+
+**Ready to let AI test your apps? 🚀**
+
+Start here: `npm install && npm start`
+
+Then load the browser extension and start testing!

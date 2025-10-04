@@ -6,6 +6,7 @@ import config from '../config/index.js';
 import ActionHandler from './actions.js';
 import { uploadScreenshot } from '../utils/storage.js';
 import { LiveStreamManager } from '../utils/liveStream.js';
+import { AIAgent } from './aiWorker.js';
 
 /**
  * Playwright Agent Worker
@@ -24,10 +25,12 @@ class Agent {
     this.liveCaptureInterval = null;
     this.liveStream = null;
     this.isRunning = false;
+    this.aiMode = config.agent.aiMode; // AI autonomous testing mode
   }
 
   async initialize() {
-    logger.info(`Initializing agent: ${this.name}`);
+    const mode = this.aiMode ? '🤖 AI AGENT MODE' : 'standard mode';
+    logger.info(`Initializing agent: ${this.name} (${mode})`);
     
     // Register agent in database
     const { error } = await supabase
@@ -41,6 +44,7 @@ class Agent {
           pid: process.pid,
           nodeVersion: process.version,
           liveStreamEnabled: config.liveStream?.enabled || false,
+          aiMode: this.aiMode, // Mark agent as AI-powered
         },
       });
     
@@ -49,10 +53,7 @@ class Agent {
       throw error;
     }
     
-    // Launch browser
-    await this.launchBrowser();
-    
-    // Start live stream if enabled
+    // Initialize live stream BEFORE launching browser
     if (config.liveStream?.enabled) {
       this.liveStream = new LiveStreamManager(this.id, this.name);
       await this.liveStream.connect();
@@ -62,10 +63,17 @@ class Agent {
       }
     }
     
+    // Launch browser (this will start live capture if liveStream is ready)
+    await this.launchBrowser();
+    
     // Start heartbeat
     this.startHeartbeat();
     
-    logger.info(`Agent ${this.name} initialized successfully`);
+    if (this.aiMode) {
+      logger.info(`🤖 Agent ${this.name} initialized successfully in AI AUTONOMOUS MODE - will take screenshots and use Claude vision for testing`);
+    } else {
+      logger.info(`Agent ${this.name} initialized successfully`);
+    }
   }
 
   async launchBrowser() {
@@ -83,6 +91,9 @@ class Agent {
     
     this.page = await this.context.newPage();
     
+    // Navigate to a blank page so screenshots work
+    await this.page.goto('about:blank');
+    
     // Start live screenshot capture if enabled
     if (config.liveStream?.enabled && this.liveStream) {
       this.startLiveCapture();
@@ -95,9 +106,12 @@ class Agent {
     const fps = config.liveStream.fps;
     const interval = 1000 / fps; // Convert FPS to milliseconds
     
+    logger.info(`📹 Starting live capture at ${fps} FPS (every ${interval}ms)`);
+    
     this.liveCaptureInterval = setInterval(async () => {
       try {
-        if (this.page && this.currentTestId) {
+        // Send frames even when idle (removed currentTestId check)
+        if (this.page && this.liveStream?.connected) {
           const screenshot = await this.page.screenshot({
             type: 'jpeg',
             quality: config.liveStream.quality,
@@ -106,13 +120,17 @@ class Agent {
           await this.liveStream.sendFrame({
             agentId: this.id,
             agentName: this.name,
-            testId: this.currentTestId,
+            testId: this.currentTestId || 'idle',
             timestamp: Date.now(),
             frame: screenshot.toString('base64'),
           });
         }
       } catch (error) {
-        // Silently fail on screenshot errors (page might be loading)
+        // Log first error only to avoid spam
+        if (!this.captureErrorLogged) {
+          logger.warn('Live capture error (will retry):', { error: error.message });
+          this.captureErrorLogged = true;
+        }
       }
     }, interval);
   }
@@ -206,6 +224,18 @@ class Agent {
       
       if (resultError) throw resultError;
       testResultId = testResult.id;
+      
+      // Check if this is an AI-powered test or if agent is in AI mode
+      const isAITest = this.aiMode || testCase.actions?.some(action => 
+        action.type === 'ai_mode' || action.type === 'ai_autonomous'
+      ) || testCase.metadata?.mode === 'ai_autonomous';
+      
+      if (isAITest) {
+        // Use AI agent for autonomous execution
+        logger.info(`🤖 Executing test in AI autonomous mode with screenshot analysis`);
+        await this.executeAITest(testCase, testResultId);
+        return;
+      }
       
       // Execute actions
       const actionHandler = new ActionHandler(this.page);
@@ -305,7 +335,10 @@ class Agent {
         new_status: 'completed',
       });
       
-      logger.info(`Test completed successfully: ${testId}`, { duration });
+      logger.info(`✅ TEST COMPLETED SUCCESSFULLY: ${testId}`, { duration });
+      console.log(`\n🎉 Agent ${this.name} finished test ${testId}`);
+      console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s`);
+      console.log(`📸 Screenshots: ${screenshots.length} steps captured\n`);
       
       // Notify live stream that test completed
       if (this.liveStream?.connected) {
@@ -316,11 +349,15 @@ class Agent {
           testId: testId,
           timestamp: Date.now(),
           status: 'completed',
+          duration: duration,
+          message: `✅ Test completed in ${(duration / 1000).toFixed(2)}s`,
         });
       }
       
     } catch (error) {
-      logger.error(`Test failed: ${testId}`, { error });
+      logger.error(`❌ TEST FAILED: ${testId}`, { error });
+      console.log(`\n❌ Agent ${this.name} test FAILED: ${testId}`);
+      console.log(`💥 Error: ${error.message}\n`);
       
       const duration = Date.now() - startTime;
       
@@ -413,6 +450,341 @@ class Agent {
 
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async executeAITest(testCase, testResultId) {
+    logger.info(`🤖 Starting AI-powered test execution for: ${testCase.name}`);
+    
+    const startTime = Date.now();
+    
+    try {
+      // Get the AI instructions from the action
+      const aiAction = testCase.actions.find(action => 
+        action.type === 'ai_mode' || action.type === 'ai_autonomous'
+      );
+      const instructions = aiAction?.description || testCase.name;
+      
+      // Navigate to starting URL
+      await this.page.goto(testCase.url);
+      logger.info(`🌐 Navigated to: ${testCase.url}`);
+      
+      // Wait for page to load
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.sleep(2000);
+      
+      // AI loop: screenshot → analyze → act → repeat
+      let stepCount = 0;
+      const maxSteps = testCase.metadata?.maxSteps || 50;
+      let isComplete = false;
+      let completionReason = '';
+      let success = false;
+      
+      // Build AI system prompt
+      const systemPrompt = `You are an autonomous QA testing agent. Your goal is to: ${instructions}
+
+Website: ${testCase.url}
+
+Your task is to:
+1. Analyze screenshots of the web page
+2. Decide what action to take next to accomplish the test goal
+3. Return ONE action at a time in JSON format
+
+Available actions:
+- click: {"type": "click", "selector": "button.submit", "description": "Click submit button"}
+- fill: {"type": "fill", "selector": "input#email", "value": "test@example.com", "description": "Fill email"}
+- keyboard: {"type": "keyboard", "text": "HELLO", "description": "Type text"}
+- keypress: {"type": "keyboard", "key": "Enter", "description": "Press Enter"}
+- wait: {"type": "wait", "timeout": 2000, "description": "Wait 2 seconds"}
+- scroll: {"type": "scroll", "description": "Scroll down"}
+- complete: {"type": "complete", "reason": "Test goal achieved", "success": true}
+
+Rules:
+1. Always respond with ONLY valid JSON - no markdown, no explanations
+2. Be specific with selectors (use IDs, classes, aria-labels, or unique attributes)
+3. Add clear descriptions for each action
+4. When the test goal is achieved, use {"type": "complete", "reason": "Goal achieved", "success": true}
+5. If stuck or unable to continue, use {"type": "complete", "reason": "Unable to continue", "success": false}
+6. Be patient - wait after actions that trigger page changes
+7. Look carefully at the screenshots to understand the current state
+
+Respond with JSON only, no other text or formatting.`;
+      
+      const conversationHistory = [{
+        role: 'user',
+        content: systemPrompt
+      }];
+      
+      const actionHandler = new ActionHandler(this.page);
+      
+      while (!isComplete && stepCount < maxSteps) {
+        stepCount++;
+        logger.info(`🧠 AI Step ${stepCount}/${maxSteps}: Analyzing page...`);
+        
+        try {
+          // Capture screenshot
+          const screenshot = await this.page.screenshot({
+            type: 'jpeg',
+            quality: 80,
+          });
+          const screenshotBase64 = screenshot.toString('base64');
+          
+          // Upload screenshot
+          const beforePath = `${testResultId}/ai-step-${stepCount}-before.jpg`;
+          await uploadScreenshot(beforePath, screenshot);
+          
+          // Get page info
+          const pageInfo = {
+            url: this.page.url(),
+            title: await this.page.title(),
+          };
+          
+          // Ask AI for next action
+          const userMessage = {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: screenshotBase64
+                }
+              },
+              {
+                type: 'text',
+                text: `Current page:
+URL: ${pageInfo.url}
+Title: ${pageInfo.title}
+Step: ${stepCount}/${maxSteps}
+
+What should I do next? Respond with ONE JSON action only. No markdown, just pure JSON.`
+              }
+            ]
+          };
+          
+          conversationHistory.push(userMessage);
+          
+          // Call Claude API
+          const anthropic = await import('@anthropic-ai/sdk').then(m => m.default);
+          const client = new anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+          
+          const response = await client.messages.create({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1024,
+            messages: conversationHistory,
+          });
+          
+          const aiResponse = response.content[0].text;
+          logger.info(`🤖 AI Response: ${aiResponse.substring(0, 200)}...`);
+          
+          conversationHistory.push({
+            role: 'assistant',
+            content: aiResponse
+          });
+          
+          // Parse action
+          const action = this.parseAIAction(aiResponse);
+          logger.info(`✅ Parsed action:`, action);
+          
+          // Create step record
+          await supabase
+            .from('test_steps')
+            .insert({
+              test_result_id: testResultId,
+              step_number: stepCount,
+              action_type: action.type,
+              action_data: action,
+              status: 'running',
+              screenshot_before: beforePath,
+              started_at: new Date().toISOString(),
+            });
+          
+          // Check if complete
+          if (action.type === 'complete') {
+            isComplete = true;
+            completionReason = action.reason || 'Test completed';
+            success = action.success || false;
+            logger.info(`✅ AI test ${success ? 'PASSED' : 'FAILED'}: ${completionReason}`);
+            
+            // Take final screenshot
+            const finalScreenshot = await this.page.screenshot({
+              type: 'jpeg',
+              quality: 80,
+            });
+            const afterPath = `${testResultId}/ai-step-${stepCount}-after.jpg`;
+            await uploadScreenshot(afterPath, finalScreenshot);
+            
+            await supabase
+              .from('test_steps')
+              .update({
+                status: success ? 'passed' : 'failed',
+                completed_at: new Date().toISOString(),
+                screenshot_after: afterPath,
+                metadata: action,
+              })
+              .eq('test_result_id', testResultId)
+              .eq('step_number', stepCount);
+            
+            break;
+          }
+          
+          // Execute action
+          const result = await actionHandler.execute(action);
+          
+          // Wait a bit for page to update
+          await this.sleep(1000);
+          
+          // Take after screenshot
+          const afterScreenshot = await this.page.screenshot({
+            type: 'jpeg',
+            quality: 80,
+          });
+          const afterPath = `${testResultId}/ai-step-${stepCount}-after.jpg`;
+          await uploadScreenshot(afterPath, afterScreenshot);
+          
+          // Update step as passed
+          await supabase
+            .from('test_steps')
+            .update({
+              status: 'passed',
+              completed_at: new Date().toISOString(),
+              screenshot_after: afterPath,
+              metadata: result,
+            })
+            .eq('test_result_id', testResultId)
+            .eq('step_number', stepCount);
+          
+          logger.info(`✅ Step ${stepCount} completed: ${action.type}`);
+          
+        } catch (stepError) {
+          logger.error(`❌ AI Step ${stepCount} failed:`, stepError);
+          
+          await supabase
+            .from('test_steps')
+            .update({
+              status: 'failed',
+              completed_at: new Date().toISOString(),
+              error_message: stepError.message,
+            })
+            .eq('test_result_id', testResultId)
+            .eq('step_number', stepCount);
+          
+          // Continue trying
+          await this.sleep(2000);
+        }
+      }
+      
+      // Update test result
+      const duration = Date.now() - startTime;
+      const finalStatus = success ? 'completed' : 'failed';
+      
+      await supabase
+        .from('test_results')
+        .update({
+          status: finalStatus,
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+          metadata: {
+            mode: 'ai_autonomous',
+            totalSteps: stepCount,
+            completionReason: completionReason || 'Max steps reached'
+          }
+        })
+        .eq('id', testResultId);
+      
+      // Release test
+      await supabase.rpc('release_test', {
+        agent_uuid: this.id,
+        test_uuid: testCase.id,
+        new_status: finalStatus,
+      });
+      
+      logger.info(`🎯 AI test ${finalStatus}: ${testCase.name}`, { 
+        duration, 
+        steps: stepCount,
+        success 
+      });
+      
+      // Console notification
+      const statusEmoji = success ? '✅' : '❌';
+      console.log(`\n${statusEmoji} AI AGENT ${this.name} FINISHED TEST`);
+      console.log(`📋 Test: ${testCase.name}`);
+      console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s`);
+      console.log(`🤖 AI Steps: ${stepCount}/${maxSteps}`);
+      console.log(`📊 Result: ${success ? 'PASSED ✅' : 'FAILED ❌'}`);
+      console.log(`💬 Reason: ${completionReason}\n`);
+      
+      // Notify live stream
+      if (this.liveStream?.connected) {
+        await this.liveStream.sendEvent({
+          type: 'test_completed',
+          agentId: this.id,
+          agentName: this.name,
+          testId: testCase.id,
+          timestamp: Date.now(),
+          status: finalStatus,
+          duration: duration,
+          steps: stepCount,
+          success: success,
+          message: `${statusEmoji} AI test ${finalStatus} in ${stepCount} steps`,
+        });
+      }
+      
+    } catch (error) {
+      logger.error('AI test execution failed:', error);
+      
+      const duration = Date.now() - startTime;
+      
+      await supabase
+        .from('test_results')
+        .update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          duration_ms: duration,
+          error_message: error.message,
+        })
+        .eq('id', testResultId);
+      
+      await supabase.rpc('release_test', {
+        agent_uuid: this.id,
+        test_uuid: testCase.id,
+        new_status: 'failed',
+      });
+      
+      throw error;
+    }
+  }
+
+  parseAIAction(text) {
+    try {
+      // Remove markdown code blocks if present
+      let jsonStr = text.trim();
+      
+      // Try to extract JSON from markdown code blocks
+      const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        jsonStr = codeBlockMatch[1];
+      }
+      
+      // Try to find JSON object
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0];
+      }
+
+      const action = JSON.parse(jsonStr);
+      
+      // Validate required fields
+      if (!action.type) {
+        throw new Error('Action missing required field: type');
+      }
+
+      return action;
+
+    } catch (error) {
+      logger.error('Failed to parse AI action JSON', { text, error });
+      throw new Error(`Invalid JSON response from AI: ${text.substring(0, 100)}`);
+    }
   }
 }
 
