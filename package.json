@@ -8,8 +8,16 @@
     "start": "node src/index.js",
     "agent": "node src/agent/worker.js",
     "spawn": "node src/orchestration/spawner.js",
+    "monitor": "node src/orchestration/monitor.js",
     "setup:db": "node src/setup/database.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "load:samples": "node examples/loadSampleTests.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:backend": "./test-backend.sh",
+    "test:backend:parallel": "npm run test:backend & npm run test:backend & npm run test:backend & wait",
+    "test:single": "HEADLESS=false npm run agent",
+    "test:watch": "tail -f logs/combined.log",
+    "test:agent": "TEST_MODE=true HEADLESS=true npm run agent",
+    "test:spawn": "TEST_MODE=true npm run spawn"
   },
   "keywords": [
     "playwright",

@@ -19,6 +19,8 @@ export const config = {
     screenshotQuality: parseInt(process.env.SCREENSHOT_QUALITY || '80', 10),
     heartbeatInterval: parseInt(process.env.AGENT_HEARTBEAT_INTERVAL_MS || '5000', 10),
     timeout: parseInt(process.env.AGENT_TIMEOUT_MS || '300000', 10),
+    testMode: process.env.TEST_MODE === 'true', // Enables test isolation
+    testId: process.env.TEST_ID || null, // Unique test run identifier
   },
   browser: {
     type: process.env.BROWSER_TYPE || 'chromium',
@@ -26,6 +28,8 @@ export const config = {
       width: parseInt(process.env.VIEWPORT_WIDTH || '1920', 10),
       height: parseInt(process.env.VIEWPORT_HEIGHT || '1080', 10),
     },
+    // Allow port offset for parallel browser debugging
+    debugPort: process.env.BROWSER_DEBUG_PORT ? parseInt(process.env.BROWSER_DEBUG_PORT, 10) : null,
   },
   retry: {
     maxRetries: parseInt(process.env.MAX_RETRIES || '3', 10),
