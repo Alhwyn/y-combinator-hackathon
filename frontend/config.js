@@ -7,16 +7,15 @@
 const isLocalhost = window.location.hostname === 'localhost' || 
                     window.location.hostname === '127.0.0.1';
 
-// Determine backend URL
+// Determine backend URL based on environment
 const API_BASE_URL = isLocalhost 
-  ? 'http://localhost:3001'  // Local development
-  : window.location.origin;   // Railway deployment (uses same domain)
+  ? 'http://localhost:3001'
+  : 'https://replication.ngrok.io';
 
-// WebSocket URL (wss:// for HTTPS, ws:// for HTTP)
-const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const WS_BASE_URL = isLocalhost
+// WebSocket URL based on environment
+const WS_BASE_URL = isLocalhost 
   ? 'ws://localhost:3001'
-  : `${WS_PROTOCOL}//${window.location.host}`;
+  : 'wss://replication.ngrok.io';
 
 export const config = {
   // API endpoints

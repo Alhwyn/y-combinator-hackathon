@@ -12,7 +12,7 @@
 export const config = {
   // ⚠️ CHANGE THIS TO YOUR BACKEND URL ⚠️
   // The browser extension will use this URL if no custom URL is saved
-  defaultServerUrl: 'http://localhost:3001',  // Default to local for safety
+  defaultServerUrl: 'https://replication.ngrok.io',  // Using ngrok endpoint
   
   // You can also set different URLs per environment
   development: {
@@ -22,7 +22,7 @@ export const config = {
   production: {
     // Set this to your production backend URL
     // Example: https://your-app.up.railway.app
-    serverUrl: 'http://localhost:3001',  // Update this!
+    serverUrl: 'https://replication.ngrok.io',
   },
   
   // Auto-detect environment (checks if on railway domain)

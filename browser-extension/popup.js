@@ -14,14 +14,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settings = await chrome.storage.local.get(['apiKey', 'serverUrl', 'testGoal', 'interval']);
   if (settings.apiKey) document.getElementById('apiKey').value = settings.apiKey;
   
-  // Default server URL - CHANGE THIS to match your backend!
+  // Default server URL - Using ngrok
   if (settings.serverUrl) {
     document.getElementById('serverUrl').value = settings.serverUrl;
   } else {
-    // ⚠️ UPDATE THIS URL to match your backend deployment ⚠️
-    // Local: http://localhost:3001
-    // Railway: https://your-app.up.railway.app
-    document.getElementById('serverUrl').value = 'http://localhost:3001';
+    // Using ngrok URL for backend
+    document.getElementById('serverUrl').value = 'https://replication.ngrok.io';
   }
   
   if (settings.testGoal) document.getElementById('testGoal').value = settings.testGoal;

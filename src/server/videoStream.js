@@ -21,6 +21,20 @@ class VideoStreamServer {
 
   start() {
     try {
+      // CORS middleware - allow all origins
+      this.app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
+        // Handle preflight requests
+        if (req.method === 'OPTIONS') {
+          return res.sendStatus(200);
+        }
+        
+        next();
+      });
+      
       // Parse JSON bodies
       this.app.use(express.json({ limit: '50mb' }));
       
@@ -29,6 +43,106 @@ class VideoStreamServer {
       
       // AI Agent API routes
       this.app.use('/api/ai-agent', aiAgentRouter);
+      
+      // Stop agents endpoint
+      this.app.post('/api/stop-agents', async (req, res) => {
+        try {
+          logger.info('🛑 Stop agents request received');
+          
+          // Import Supabase client
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+          );
+          
+          // Cancel all running tests
+          const { data: cancelledTests, error: cancelError } = await supabase
+            .from('test_cases')
+            .update({ status: 'cancelled' })
+            .in('status', ['pending', 'running'])
+            .select();
+          
+          if (cancelError) {
+            logger.error('Failed to cancel tests', { error: cancelError });
+            return res.status(500).json({ error: 'Failed to cancel tests' });
+          }
+          
+          const cancelledCount = cancelledTests?.length || 0;
+          logger.info(`✅ Cancelled ${cancelledCount} running tests`);
+          
+          res.json({
+            success: true,
+            cancelledTests: cancelledCount,
+            message: `Stopped ${cancelledCount} test(s). Agents will become idle.`
+          });
+          
+        } catch (error) {
+          logger.error('Error stopping agents', { error: error.message });
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      });
+      
+      // Spawn agents endpoint
+      this.app.post('/api/spawn-agents', async (req, res) => {
+        try {
+          const { prompt, url, agents } = req.body;
+          
+          if (!prompt || !url || !agents) {
+            return res.status(400).json({ error: 'Missing required fields: prompt, url, agents' });
+          }
+          
+          logger.info('🚀 Spawn agents request received', { prompt, url, agents });
+          
+          // Import Supabase client
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+          );
+          
+          // Create test case
+          const { data: testCase, error: testError } = await supabase
+            .from('test_cases')
+            .insert({
+              name: prompt,
+              description: `AI-powered test: ${prompt}`,
+              url: url,
+              actions: [
+                {
+                  type: 'ai_autonomous',
+                  description: prompt
+                }
+              ],
+              status: 'pending',
+              metadata: {
+                created_by: 'dashboard',
+                agent_count: agents,
+                mode: 'ai_autonomous',
+                maxSteps: 50
+              }
+            })
+            .select()
+            .single();
+          
+          if (testError) {
+            logger.error('Failed to create test case', { error: testError });
+            return res.status(500).json({ error: 'Failed to create test case' });
+          }
+          
+          logger.info('✅ Test case created', { testCaseId: testCase.id });
+          
+          res.json({
+            success: true,
+            testCaseId: testCase.id,
+            message: `${agents} agents will pick up the test shortly`
+          });
+          
+        } catch (error) {
+          logger.error('Error spawning agents', { error: error.message });
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      });
       
       // Root endpoint for testing
       this.app.get('/', (req, res) => {
