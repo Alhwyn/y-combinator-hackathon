@@ -2,9 +2,10 @@
 
 FROM node:18-slim
 
-# Install Playwright dependencies
+# Install system dependencies (Playwright, Sharp, and build tools)
 RUN apt-get update && \
     apt-get install -y \
+    # Playwright dependencies
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
@@ -21,6 +22,14 @@ RUN apt-get update && \
     libasound2 \
     libpango-1.0-0 \
     libcairo2 \
+    # Sharp dependencies
+    python3 \
+    build-essential \
+    g++ \
+    make \
+    # General utilities
+    wget \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -29,8 +38,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use install instead of ci for better compatibility)
+RUN npm install --omit=dev --no-audit --no-fund
 
 # Install Playwright browsers
 RUN npx playwright install chromium --with-deps
