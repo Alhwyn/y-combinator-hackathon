@@ -564,18 +564,44 @@ What should I do next? Respond with ONE JSON action only. No markdown, just pure
           
           conversationHistory.push(userMessage);
           
-          // Call Claude API
+          // Call Claude API with retry logic for rate limits
           const anthropic = await import('@anthropic-ai/sdk').then(m => m.default);
           const client = new anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
           
-          const response = await client.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 1024,
-            messages: conversationHistory,
-          });
+          let response;
+          let retryCount = 0;
+          const maxRetries = 3;
+          
+          while (retryCount <= maxRetries) {
+            try {
+              response = await client.messages.create({
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: 1024,
+                messages: conversationHistory,
+              });
+              break; // Success, exit retry loop
+            } catch (error) {
+              if (error.status === 429 && retryCount < maxRetries) {
+                // Rate limit error - wait with exponential backoff
+                const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 seconds
+                logger.warn(`⚠️ Rate limit hit, waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                retryCount++;
+              } else {
+                // Other error or max retries reached
+                throw error;
+              }
+            }
+          }
           
           const aiResponse = response.content[0].text;
           logger.info(`🤖 AI Response: ${aiResponse.substring(0, 200)}...`);
+          
+          // Add delay between AI steps to prevent rate limit acceleration issues
+          // This gives Anthropic's rate limiter time to stabilize
+          const stepDelay = 2000; // 2 seconds between steps
+          logger.info(`⏳ Waiting ${stepDelay}ms before next step...`);
+          await new Promise(resolve => setTimeout(resolve, stepDelay));
           
           conversationHistory.push({
             role: 'assistant',

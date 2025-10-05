@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, AlertCircle, Play } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface TimelineStep {
   id: string;
@@ -8,57 +9,87 @@ interface TimelineStep {
   status: 'completed' | 'running' | 'pending' | 'error';
   duration?: string;
   description?: string;
+  timestamp?: Date;
 }
 
-const timelineSteps: TimelineStep[] = [
-  {
-    id: '1',
-    title: 'Initializing Test Environment',
-    status: 'completed',
-    duration: '0:12',
-    description: 'Setting up test containers and dependencies'
-  },
-  {
-    id: '2',
-    title: 'Running Unit Tests',
-    status: 'completed',
-    duration: '0:28',
-    description: 'Executing 47 unit tests across 12 modules'
-  },
-  {
-    id: '3',
-    title: 'Integration Testing',
-    status: 'running',
-    duration: '0:45',
-    description: 'Testing API endpoints and database connections'
-  },
-  {
-    id: '4',
-    title: 'Performance Analysis',
-    status: 'pending',
-    description: 'Measuring response times and memory usage'
-  },
-  {
-    id: '5',
-    title: 'Security Scan',
-    status: 'pending',
-    description: 'Checking for vulnerabilities and best practices'
-  },
-  {
-    id: '6',
-    title: 'Generating Report',
-    status: 'pending',
-    description: 'Compiling results and recommendations'
-  }
-];
+interface TimelineProps {
+  steps?: TimelineStep[];
+  onStepUpdate?: (step: TimelineStep) => void;
+}
 
-export const Timeline = () => {
+export const Timeline = ({ steps: propSteps, onStepUpdate }: TimelineProps) => {
+  const [steps, setSteps] = useState<TimelineStep[]>(propSteps || [
+    {
+      id: '1',
+      title: 'Initializing Agent',
+      status: 'pending',
+      description: 'Setting up AI agent and browser environment'
+    },
+    {
+      id: '2',
+      title: 'Analyzing Repository',
+      status: 'pending',
+      description: 'Understanding codebase structure and requirements'
+    },
+    {
+      id: '3',
+      title: 'Running Tests',
+      status: 'pending',
+      description: 'Executing autonomous testing based on prompt'
+    },
+    {
+      id: '4',
+      title: 'Gathering Results',
+      status: 'pending',
+      description: 'Collecting test outcomes and screenshots'
+    },
+    {
+      id: '5',
+      title: 'Generating Report',
+      status: 'pending',
+      description: 'Compiling findings and recommendations'
+    }
+  ]);
+
+  useEffect(() => {
+    if (propSteps) {
+      setSteps(propSteps);
+    }
+  }, [propSteps]);
+
+  // Helper to update step status
+  const updateStep = (stepId: string, updates: Partial<TimelineStep>) => {
+    setSteps(prevSteps => {
+      const newSteps = prevSteps.map(step => 
+        step.id === stepId 
+          ? { ...step, ...updates, timestamp: new Date() }
+          : step
+      );
+      
+      // Call callback if provided
+      const updatedStep = newSteps.find(s => s.id === stepId);
+      if (updatedStep && onStepUpdate) {
+        onStepUpdate(updatedStep);
+      }
+      
+      return newSteps;
+    });
+  };
+
+  // Expose updateStep via window for external updates
+  useEffect(() => {
+    (window as any).updateTimelineStep = updateStep;
+    return () => {
+      delete (window as any).updateTimelineStep;
+    };
+  }, []);
+
   const getStatusIcon = (status: TimelineStep['status']) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'running':
-        return <Play className="w-4 h-4 text-blue-500" />;
+        return <Play className="w-4 h-4 text-blue-500 animate-pulse" />;
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
@@ -71,7 +102,7 @@ export const Timeline = () => {
       case 'completed':
         return <Badge variant="default" className="bg-green-500">Completed</Badge>;
       case 'running':
-        return <Badge variant="default" className="bg-blue-500">Running</Badge>;
+        return <Badge variant="default" className="bg-blue-500 animate-pulse">Running</Badge>;
       case 'error':
         return <Badge variant="destructive">Error</Badge>;
       default:
@@ -79,13 +110,20 @@ export const Timeline = () => {
     }
   };
 
+  const formatDuration = (start: Date, end: Date) => {
+    const seconds = Math.floor((end.getTime() - start.getTime()) / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-foreground">Test Timeline</CardTitle>
+        <CardTitle className="text-sm font-medium text-foreground">Agent Timeline</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {timelineSteps.map((step, index) => (
+        {steps.map((step, index) => (
           <div key={step.id} className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
               {getStatusIcon(step.status)}

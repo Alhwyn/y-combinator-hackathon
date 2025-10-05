@@ -17,7 +17,8 @@ export AI_MODE=true
 export ENABLE_LIVE_STREAM=true
 export CONCURRENT_AGENTS=2
 export HEADLESS=true
-export LIVE_STREAM_WS_URL="wss://replication.ngrok.io/agent"
+# Use localhost for agent streaming (avoids 502 errors through ngrok)
+export LIVE_STREAM_WS_URL="ws://localhost:3001/agent"
 
 # Create test case and spawn agents
 node run-custom-test.js \

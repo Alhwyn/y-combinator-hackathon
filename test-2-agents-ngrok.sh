@@ -7,8 +7,9 @@ echo "🎮 Starting 2 AI Agents to Play Wordle (with ngrok streaming)"
 echo "=============================================================="
 echo ""
 
-# Set the ngrok WebSocket URL for agents to connect to
-export LIVE_STREAM_WS_URL="wss://replication.ngrok.io/agent"
+# Set localhost for agent WebSocket (ngrok causes 502 errors)
+# Viewer still connects through ngrok, but agents stream locally
+export LIVE_STREAM_WS_URL="ws://localhost:3001/agent"
 export ENABLE_LIVE_STREAM=true
 export AI_MODE=true
 export CONCURRENT_AGENTS=2
@@ -16,7 +17,8 @@ export HEADLESS=true
 
 echo "✅ Configuration:"
 echo "   Agents: 2"
-echo "   Stream Server: wss://replication.ngrok.io"
+echo "   Agent Stream: ws://localhost:3001/agent"
+echo "   Viewer Stream: wss://replication.ngrok.io/viewer"  
 echo "   Dashboard: https://replication.ngrok.io/dashboard/"
 echo ""
 

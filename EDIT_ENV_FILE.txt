@@ -1,0 +1,21 @@
+🚨 CRITICAL: Edit Your .env File NOW
+
+1. Open file: /Users/alhwyngeonzon/Programming/yc-supabase/.env
+
+2. Find line 7:
+   LIVE_STREAM_WS_URL="wss://multi-agent-testing-production.up.railway.app/agent"
+
+3. Change it to:
+   LIVE_STREAM_WS_URL="ws://localhost:3001/agent"
+
+4. Save the file (Cmd+S)
+
+5. Backend will auto-reload
+
+THAT'S IT! Video will work immediately after this change!
+
+The backend is already running and will pick up the change.
+Your frontend is already configured correctly.
+This ONE line change enables video streaming! 🎬
+
+
